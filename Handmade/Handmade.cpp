@@ -72,7 +72,7 @@ static void Win32ResizeDIBSection(win32_offscreen_buffer& buffer, int Width, int
 	//RenderWeirdGradient(0, 0);
 }
 
-static void Win32DisplayBufferInWindow(HDC DeviceContext, win32_offscreen_buffer buffer, int windowWidth, int windowHeight, int X, int Y, int Width, int Height) {
+static void Win32DisplayBufferInWindow(HDC DeviceContext, win32_offscreen_buffer buffer, int windowWidth, int windowHeight) {
 	StretchDIBits(DeviceContext,
 		/*X, Y, Width, Height,
 		X, Y, Width, Height, */
@@ -120,7 +120,7 @@ LRESULT CALLBACK Win32MainWindowCallback(HWND Window, UINT Message, WPARAM WPara
 
 
 			win32_window_dimension dimension = Win32GetWindowDimension(Window);
-			Win32DisplayBufferInWindow(deviceContext, globalBackBuffer, dimension.Width, dimension.Height, x, y, width, height);
+			Win32DisplayBufferInWindow(deviceContext, globalBackBuffer, dimension.Width, dimension.Height);
 			EndPaint(Window, &Paint);
 		} break;
 		default:
@@ -136,7 +136,7 @@ int CALLBACK WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CommandLi
 	WNDCLASS WindowClass = {};
 
 	Win32ResizeDIBSection(globalBackBuffer, 1280, 720);
-	WindowClass.style = CS_HREDRAW | CS_VREDRAW;
+	WindowClass.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
 	WindowClass.lpfnWndProc = Win32MainWindowCallback;
 	WindowClass.hInstance = Instance;
 	WindowClass.lpszClassName = "HandmadeHeroWindowClass";
@@ -158,6 +158,7 @@ int CALLBACK WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CommandLi
 
 		if (Window) {
 			Running = true;
+			HDC DeviceContext = GetDC(Window);
 			int XOffset = 0;
 			int YOffset = 0;
 			while (Running) {
@@ -174,10 +175,9 @@ int CALLBACK WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CommandLi
 
 				RenderWeirdGradient(globalBackBuffer, XOffset++, YOffset++);
 
-				HDC DeviceContext = GetDC(Window);
+				
 				win32_window_dimension dimension = Win32GetWindowDimension(Window);
-				Win32DisplayBufferInWindow(DeviceContext, globalBackBuffer, dimension.Width, dimension.Height, 0, 0, dimension.Width, dimension.Height);
-				ReleaseDC(Window, DeviceContext);
+				Win32DisplayBufferInWindow(DeviceContext, globalBackBuffer, dimension.Width, dimension.Height);
 			}
 			
 		} else {
